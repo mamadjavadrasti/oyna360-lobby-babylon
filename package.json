@@ -1,0 +1,63 @@
+{
+  "name": "@oyna360/lobby-babylon",
+  "version": "0.2.0",
+  "description": "Babylon.js renderer for oyna360 Lobby — PlatformLobby, avatars, scene. Depends on @oyna360/lobby-sdk (Core).",
+  "license": "MIT",
+  "author": "oyna360",
+  "keywords": [
+    "oyna360",
+    "lobby",
+    "babylonjs",
+    "multiplayer",
+    "avatar",
+    "3d"
+  ],
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "docs",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "prepublishOnly": "npm run build",
+    "typecheck": "tsc --noEmit",
+    "lint": "echo \"No lint configured for @oyna360/lobby-babylon\""
+  },
+  "dependencies": {
+    "@babylonjs/loaders": "^7.44.0",
+    "@oyna360/lobby-sdk": "^0.2.0"
+  },
+  "peerDependencies": {
+    "@babylonjs/core": "^7.0.0"
+  },
+  "devDependencies": {
+    "@babylonjs/core": "^7.44.0",
+    "typescript": "^5.7.2"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mamadjavadrasti/oyna360-lobby-babylon.git"
+  },
+  "bugs": {
+    "url": "https://github.com/mamadjavadrasti/oyna360-lobby-babylon/issues"
+  },
+  "homepage": "https://github.com/mamadjavadrasti/oyna360-lobby-babylon#readme",
+  "publishConfig": {
+    "access": "public"
+  }
+}

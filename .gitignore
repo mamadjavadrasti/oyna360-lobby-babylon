@@ -1,0 +1,13 @@
+node_modules/
+*.tsbuildinfo
+.idea
+*.tgz
+lobby-babylon-pack-name.txt
+
+.turbo/
+.*-diag-test/
+.avatar-render-diag-test/
+.mobile-avatar-diag-test/
+.plaza-diag-test/
+.real-device-avatar-diag-test/
+.perf-diag-test/
