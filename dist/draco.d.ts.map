@@ -1,1 +1,1 @@
-{"version":3,"file":"draco.d.ts","sourceRoot":"","sources":["../src/draco.ts"],"names":[],"mappings":"AAmCA;;;;GAIG;AACH,wBAAgB,kBAAkB,IAAI,OAAO,CAAC,IAAI,CAAC,CAGlD"}
+{"version":3,"file":"draco.d.ts","sourceRoot":"","sources":["../src/draco.ts"],"names":[],"mappings":"AAMA,iFAAiF;AACjF,wBAAgB,qBAAqB,CAAC,OAAO,EAAE;IAAE,mBAAmB,EAAE,MAAM,CAAA;CAAE,QAQ7E;AA8CD;;;;GAIG;AACH,wBAAgB,kBAAkB,CAAC,QAAQ,CAAC,EAAE,MAAM,GAAG,OAAO,CAAC,IAAI,CAAC,CAGnE"}

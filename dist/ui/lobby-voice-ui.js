@@ -16,9 +16,13 @@ export function attachLobbyVoiceUi(lobby) {
     const voice = lobby.getVoiceChat();
     if (!voice)
         return () => undefined;
-    const anchor = document.getElementById('oyna-lobby-voice-anchor');
-    if (!anchor)
-        return () => undefined;
+    let anchor = document.getElementById('oyna-lobby-voice-anchor');
+    const ownAnchor = !anchor;
+    if (!anchor) {
+        anchor = document.createElement('div');
+        anchor.style.cssText = 'position:fixed;left:16px;bottom:90px;z-index:30;pointer-events:auto';
+        document.body.append(anchor);
+    }
     const wrap = document.createElement('div');
     wrap.style.cssText = 'position:relative;width:42px;height:42px;pointer-events:auto';
     const mic = document.createElement('button');
@@ -30,10 +34,8 @@ export function attachLobbyVoiceUi(lobby) {
     mode.title = 'محدوده ویس';
     mode.style.cssText =
         `position:absolute;left:calc(100% + 6px);top:0;height:42px;min-width:88px;border:1px solid rgba(255,255,255,.14);border-radius:12px;background:rgba(8,8,20,.55);color:#fff;font:12px ${LOBBY_UI_FONT};padding:0 8px;cursor:pointer;pointer-events:auto`;
-    mode.innerHTML = [
-        '<option value="friends">دوستان</option>',
-        '<option value="all">همه</option>',
-    ].join('');
+    mode.innerHTML = '<option value="friends">گروه دوستان</option>' +
+        (lobby.canUseLobbyVoice() ? '<option value="all">اعضای لابی</option>' : '');
     const sync = () => {
         const state = voice.getState();
         mode.value = state.mode;
@@ -86,20 +88,34 @@ export function attachLobbyVoiceUi(lobby) {
     };
     syncAccess();
     const offConnected = lobby.on('connected', syncAccess);
+    const offError = lobby.on('error', ({ code, message }) => {
+        if (code === 'COMMUNICATIONS_VOICE_ERROR')
+            showVoiceToast(message);
+    });
     const off = voice.onStateChange(sync);
     sync();
     return () => {
         off();
         offConnected();
+        offError();
         anchor.replaceChildren();
+        if (ownAnchor)
+            anchor.remove();
     };
 }
 function showVoiceToast(text, ms = 2600) {
-    const toast = document.getElementById('oyna-lobby-toast');
-    if (!toast)
-        return;
+    let toast = document.getElementById('oyna-lobby-toast');
+    const ownToast = !toast;
+    if (!toast) {
+        toast = document.createElement('div');
+        toast.style.cssText = `position:fixed;bottom:145px;left:16px;z-index:40;max-width:280px;padding:12px;border-radius:12px;background:#201334;color:white;direction:rtl;font:13px ${LOBBY_UI_FONT}`;
+        document.body.append(toast);
+    }
     toast.textContent = text;
     toast.classList.add('is-open');
-    window.setTimeout(() => toast.classList.remove('is-open'), ms);
+    window.setTimeout(() => { if (ownToast)
+        toast.remove();
+    else
+        toast.classList.remove('is-open'); }, ms);
 }
 //# sourceMappingURL=lobby-voice-ui.js.map

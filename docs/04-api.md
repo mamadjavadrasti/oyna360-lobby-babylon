@@ -32,6 +32,7 @@ Mock Context + معمولاً `enableMultiplayer: false`.
 | `enableMultiplayer` | `true` | اتصال سوکت |
 | `enableChat` | `true` | overlay چت |
 | `enableVoice` | `true` | voice WebRTC |
+| `communications` | خودکار در iframe | کانال مستقل متن و تماس گروهی؛ `allowLobbyVoice` پیش‌فرض false؛ [راهنما](./09-communications.md) |
 | `enablePresenceUi` | با مالتی‌پلیر | toast ورود/خروج |
 | `enableConnectionUi` | با مالتی‌پلیر | قطع اتصال |
 | `enableOrientationUi` | `true` | اعلان landscape موبایل |

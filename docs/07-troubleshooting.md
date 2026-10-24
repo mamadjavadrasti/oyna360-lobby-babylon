@@ -1,5 +1,9 @@
 # عیب‌یابی — lobby-babylon
 
+## آواتار واقعی نمی‌آید یا آدمک ساده نمایش داده می‌شود
+
+[راهنمای استاندارد آواتار](./08-avatars.md#۶-تشخیص-علت-لود-نشدن) را ببینید. loader دستی Draco نسازید؛ SDK آن را مدیریت می‌کند. GLB، تکسچر و `/vendor/draco` باید از origin بازی با CORS قابل دریافت باشند. هشدار `falling back to procedural` یعنی GLB اصلی لود نشده است. در استقرار با originهای جدا، `configureAvatarLoader` را پیش از اولین create با مسیر decoder پلتفرم تنظیم کنید.
+
 ## Timed out waiting for platform:init
 
 - داخل iframe نیستید و `PlatformSDK.init()` را قبلش صدا نزده‌اید.

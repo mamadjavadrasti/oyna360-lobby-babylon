@@ -47,7 +47,7 @@ function loadGlbContainer(scene, glbUrl) {
     // Draco WASM must be ready before the first compressed avatar parse.
     const pending = (async () => {
         const tDraco = performance.now();
-        await ensureDracoDecoder();
+        await ensureDracoDecoder(glbUrl);
         if (isLobbyPerfDiagEnabled()) {
             lobbyPerfMark('draco_ensure', performance.now() - tDraco, glbUrl.slice(-48));
         }

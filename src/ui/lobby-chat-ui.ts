@@ -158,6 +158,13 @@ export function attachLobbyChatUi(lobby: PlatformLobby, canvas: HTMLCanvasElemen
   };
   syncAccess();
   const offConnected = lobby.on('connected', syncAccess);
+  const offError = lobby.on('error', ({ code, message }) => {
+    if (code === 'COMMUNICATIONS_VOICE_ERROR') return;
+    toast.textContent = message;
+    toast.style.display = 'block';
+    if (toastTimer) window.clearTimeout(toastTimer);
+    toastTimer = window.setTimeout(hideToast, 5000);
+  });
 
   const off = lobby.on('chat', ({ userId, displayName, username, text }) => {
     const mine = userId === lobby.getUser().id;
@@ -184,6 +191,7 @@ export function attachLobbyChatUi(lobby: PlatformLobby, canvas: HTMLCanvasElemen
   return () => {
     off();
     offConnected();
+    offError();
     hideToast();
     toggle.remove();
     root.remove();

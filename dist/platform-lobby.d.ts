@@ -40,10 +40,12 @@ export declare class PlatformLobby {
     private connectionDispose;
     private orientationDispose;
     private voiceChat;
+    private communications;
     private lobbyFeatures;
     private resizeHandler;
     private unsubAvatarChange;
     private applyingAvatarState;
+    private avatarStateDirty;
     private constructor();
     static create(options: PlatformLobbyCreateOptions): Promise<PlatformLobby>;
     static createFromPlatform(canvas: HTMLCanvasElement, config?: PlatformLobbyConfig): Promise<PlatformLobby>;
@@ -138,6 +140,8 @@ export declare class PlatformLobby {
     /** Game data channel — defaults on when flags are omitted. */
     canUseData(): boolean;
     canUseVoice(): boolean;
+    /** Public lobby calls must be enabled explicitly; friends-group calls are the default. */
+    canUseLobbyVoice(): boolean;
     /** Virtual joystick / on-screen pad. x = strafe, z = forward (-1..1). */
     setMoveStick(x: number, z: number): void;
     setLookStick(x: number, y: number): void;

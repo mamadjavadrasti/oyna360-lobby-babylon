@@ -5,9 +5,11 @@
 پلتفرم هویت، آواتار و اتاق WebSocket را می‌دهد.  
 **ظاهر لابی، پورتال‌ها و شروع گیم‌پلی مال شماست.**
 
-**نسخه:** `0.2.0` · وابسته به [`@oyna360/lobby-sdk`](https://www.npmjs.com/package/@oyna360/lobby-sdk) (Core).
+**نسخهٔ سورس:** `0.3.0` · وابسته به [`@oyna360/lobby-sdk`](https://www.npmjs.com/package/@oyna360/lobby-sdk) (Core). انتشار این تغییرات به npm جدا از ویرایش سورس است.
 
 > اتصال اولیه (سشن / Authorize) کار [`@oyna360/game-sdk`](https://www.npmjs.com/package/@oyna360/game-sdk) است.
+
+**برای بارگذاری آواتار واقعی و تحویل SDK به AI از [راهنمای استاندارد آواتار](./docs/08-avatars.md) شروع کنید.** مسیر آماده: `PlatformSDK.init()` → `PlatformLobby.create({ platformInit })`. لود مدل، Draco، لباس و آواتارهای دیگر داخل SDK انجام می‌شود.
 
 ---
 
@@ -25,7 +27,7 @@ pnpm add @oyna360/lobby-babylon @babylonjs/core
 ```json
 {
   "dependencies": {
-    "@oyna360/lobby-babylon": "^0.2.0",
+    "@oyna360/lobby-babylon": "^0.3.0",
     "@babylonjs/core": "^7.44.0"
   }
 }
@@ -131,11 +133,16 @@ lobby.applyPlazaLayout();
 ## Avatar customization (محلی + شبکه)
 
 ```ts
-lobby.avatar.setSkin({ bodyColor: '#4f46e5' });
-lobby.avatar.addAccessory({ id: 'hat-1', itemId: 'cap', slot: 'hat' });
+// برای ظاهر بدون تکسچر لباس؛ patch فیلدهای قبلی را حفظ می‌کند.
+if (!lobby.getAvatar().customConfig.baseAlbedoUrl) {
+  lobby.avatar.patchSkin({ bodyColor: '#4f46e5' });
+}
+lobby.avatar.addAccessory({ id: 'hat-1', itemId: 'cap', slot: 'hat', kind: 'cap' });
 ```
 
 State در Core نگه داشته می‌شود؛ Babylon فقط رندر می‌کند. بعد از اتصال، سرور validate می‌کند و به remoteها می‌فرستد.
+
+`setBase` مدل محلی را زنده تعویض نمی‌کند و `attach` به‌تنهایی mesh نمی‌سازد. رفتار دقیق و مثال صحنهٔ اختصاصی را در [راهنمای آواتار](./docs/08-avatars.md) بخوانید.
 
 ---
 
@@ -157,6 +164,8 @@ API عمومی `PlatformLobby` همان است (`create` / `createFromPlatform` 
 
 | موضوع | فایل |
 |--------|------|
+| **مرجع آواتار و راهنمای AI** | [docs/08-avatars.md](./docs/08-avatars.md) |
+| **متن و تماس زندهٔ گروه دوستان** | [docs/09-communications.md](./docs/09-communications.md) |
 | نصب و publish | [docs/02-install.md](./docs/02-install.md) |
 | اتصال | [docs/01-connect.md](./docs/01-connect.md) |
 | حالت‌ها | [docs/03-modes.md](./docs/03-modes.md) |

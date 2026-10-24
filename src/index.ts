@@ -6,6 +6,7 @@
 export const LOBBY_BABYLON_BUILD = 'avatar-join-v13';
 
 export { PlatformLobby } from './platform-lobby.js';
+export { configureAvatarLoader } from './draco.js';
 export { SceneManager } from './scene-manager.js';
 export {
   AvatarFactory,
@@ -112,6 +113,8 @@ export { attachLobbyOrientationUi } from './ui/lobby-orientation-ui.js';
 export {
   LOBBY_SDK_BUILD,
   LobbyClient,
+  LobbyCommunications,
+  requestLobbyCommunicationCredentials,
   LobbyAvatarController,
   PlatformBridge,
   NetworkClient,
@@ -184,6 +187,9 @@ export {
 
 export type {
   LobbyClientConnectOptions,
+  LobbyCommunicationChannel,
+  LobbyCommunicationCredentials,
+  LobbyCommunicationsOptions,
   LobbyClientEvents,
   LobbyNetworkLike,
   LobbyWelcomeMeta,

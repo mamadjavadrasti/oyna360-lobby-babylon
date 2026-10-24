@@ -1,6 +1,6 @@
 {
   "name": "@oyna360/lobby-babylon",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Babylon.js renderer for oyna360 Lobby — PlatformLobby, avatars, scene. Depends on @oyna360/lobby-sdk (Core).",
   "license": "MIT",
   "author": "oyna360",
@@ -37,7 +37,7 @@
   },
   "dependencies": {
     "@babylonjs/loaders": "^7.44.0",
-    "@oyna360/lobby-sdk": "^0.2.0"
+    "@oyna360/lobby-sdk": "^0.3.0"
   },
   "peerDependencies": {
     "@babylonjs/core": "^7.0.0"

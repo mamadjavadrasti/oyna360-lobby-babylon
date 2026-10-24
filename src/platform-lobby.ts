@@ -5,6 +5,7 @@ import {
   sanitizeLobbyChat,
   sanitizeLobbyDataChannel,
   sanitizeLobbyDataPayload,
+  resolveGlbUrl,
   type LobbyEmoteKind,
   type LobbyPlayerState,
   type LobbyFeatureFlags,
@@ -39,6 +40,7 @@ import { attachLobbyOrientationUi } from './ui/lobby-orientation-ui';
 import { ensureLobbyPersianFont } from '@oyna360/lobby-sdk';
 import { provisionalSpawnSlot, resolveSpawnPose } from '@oyna360/lobby-sdk';
 import { LobbyVoiceChat } from '@oyna360/lobby-sdk';
+import { LobbyCommunications } from '@oyna360/lobby-sdk';
 import type {
   LobbyEventMap,
   LobbyEventName,
@@ -86,10 +88,12 @@ export class PlatformLobby {
   private connectionDispose: (() => void) | null = null;
   private orientationDispose: (() => void) | null = null;
   private voiceChat: LobbyVoiceChat | null = null;
+  private communications: LobbyCommunications | null = null;
   private lobbyFeatures: LobbyFeatureFlags = { ...DEFAULT_LOBBY_FEATURES };
   private resizeHandler = () => this.sceneManager?.resize();
   private unsubAvatarChange: (() => void) | null = null;
   private applyingAvatarState = false;
+  private avatarStateDirty = false;
 
   private constructor(
     init: SdkInitPayload,
@@ -160,7 +164,7 @@ export class PlatformLobby {
     // Font CDN must never block first paint (can hang >60s on filtered networks).
     void ensureLobbyPersianFont();
     // Warm Draco WASM in parallel with scene setup (HTTP-cached on repeat visits).
-    void ensureDracoDecoder();
+    void ensureDracoDecoder(resolveGlbUrl(this.init.avatar) ?? this.init.avatarBases?.[0]?.glbUrl);
 
     this.sceneManager = new SceneManager(this.canvas, this.config);
 
@@ -411,14 +415,29 @@ export class PlatformLobby {
   }
 
   private connectNetwork() {
-    this.voiceChat = new LobbyVoiceChat({
-      sendJoin: (mode) => this.lobbyClient?.sendVoiceJoin(mode),
-      sendLeave: () => this.lobbyClient?.sendVoiceLeave(),
-      sendMute: (muted) => this.lobbyClient?.sendVoiceMute(muted),
-      sendOffer: (toUserId, sdp) => this.lobbyClient?.sendVoiceOffer(toUserId, sdp),
-      sendAnswer: (toUserId, sdp) => this.lobbyClient?.sendVoiceAnswer(toUserId, sdp),
-      sendIce: (toUserId, candidate) => this.lobbyClient?.sendVoiceIce(toUserId, candidate),
-    });
+    const separateCommunications = this.config.communications !== false &&
+      (this.config.communications !== undefined || window.parent !== window);
+    if (separateCommunications) {
+      this.communications = new LobbyCommunications(
+        this.init.user.id,
+        this.config.communications || {},
+        (message) => this.emit('chat', message),
+        (error, channel) => this.emit('error', {
+          code: channel === 'text' ? 'COMMUNICATIONS_ERROR' : 'COMMUNICATIONS_VOICE_ERROR',
+          message: error.message,
+        }),
+      );
+      this.voiceChat = this.communications.voice;
+    } else {
+      this.voiceChat = new LobbyVoiceChat({
+        sendJoin: (mode) => this.lobbyClient?.sendVoiceJoin(mode),
+        sendLeave: () => this.lobbyClient?.sendVoiceLeave(),
+        sendMute: (muted) => this.lobbyClient?.sendVoiceMute(muted),
+        sendOffer: (toUserId, sdp) => this.lobbyClient?.sendVoiceOffer(toUserId, sdp),
+        sendAnswer: (toUserId, sdp) => this.lobbyClient?.sendVoiceAnswer(toUserId, sdp),
+        sendIce: (toUserId, candidate) => this.lobbyClient?.sendVoiceIce(toUserId, candidate),
+      });
+    }
     this.voiceChat.setContext(this.init.user.id, []);
     this.voiceChat.setPositionProvider((userId) => {
       if (userId === this.init.user.id) {
@@ -441,12 +460,17 @@ export class PlatformLobby {
 
   /** Wire Core events → Babylon render + public PlatformLobby events. */
   private bindLobbyClient(client: LobbyClient) {
-    client.on('welcome', ({ self, players, meta }) => {
+    client.on('welcome', ({ roomId, self, players, meta }) => {
       this.localController.teleportTo(self.position, self.rotationY);
       if (meta?.lobbyFeatures) this.lobbyFeatures = meta.lobbyFeatures;
-      this.voiceChat?.setContext(this.init.user.id, meta?.friendUserIds ?? []);
-      if (meta?.voicePeers) {
-        this.voiceChat?.handleVoiceState(meta.voicePeers, meta?.friendUserIds ?? []);
+      if (this.communications) {
+        this.communications.setLobbyRoom(roomId);
+        if (this.config.enableChat !== false) void this.communications.startText(roomId);
+      } else {
+        this.voiceChat?.setContext(this.init.user.id, meta?.friendUserIds ?? []);
+        if (meta?.voicePeers) {
+          this.voiceChat?.handleVoiceState(meta.voicePeers, meta?.friendUserIds ?? []);
+        }
       }
       for (const p of players) this.remotePlayers.upsert(p);
       this.emit('connected', undefined);
@@ -500,6 +524,7 @@ export class PlatformLobby {
     });
 
     client.on('chat', (payload) => {
+      if (this.communications) return;
       if (payload.userId === this.init.user.id) return;
       this.emit('chat', payload);
     });
@@ -510,24 +535,31 @@ export class PlatformLobby {
     });
 
     client.on('voice:state', ({ peers, friendUserIds }) => {
+      if (this.communications) return;
       this.voiceChat?.handleVoiceState(peers, friendUserIds);
     });
     client.on('voice:joined', (peer) => {
+      if (this.communications) return;
       this.voiceChat?.handleVoiceJoined(peer);
     });
     client.on('voice:left', ({ userId }) => {
+      if (this.communications) return;
       this.voiceChat?.handleVoiceLeft(userId);
     });
     client.on('voice:mute', ({ userId, muted }) => {
+      if (this.communications) return;
       this.voiceChat?.handleVoiceMute(userId, muted);
     });
     client.on('voice:offer', ({ fromUserId, sdp }) => {
+      if (this.communications) return;
       void this.voiceChat?.handleOffer(fromUserId, sdp);
     });
     client.on('voice:answer', ({ fromUserId, sdp }) => {
+      if (this.communications) return;
       void this.voiceChat?.handleAnswer(fromUserId, sdp);
     });
     client.on('voice:ice', ({ fromUserId, candidate }) => {
+      if (this.communications) return;
       void this.voiceChat?.handleIce(fromUserId, candidate);
     });
 
@@ -634,7 +666,12 @@ export class PlatformLobby {
    * Base model swap (new GLB) updates state for getAvatar()/next spawn only.
    */
   private async applyLocalAvatarState() {
-    if (this.destroyed || this.applyingAvatarState) return;
+    if (this.destroyed) return;
+    if (this.applyingAvatarState) {
+      this.avatarStateDirty = true;
+      return;
+    }
+    this.avatarStateDirty = false;
     const sdk = this.avatar.toSdk();
     Object.assign(this.init.avatar, sdk);
     this.init.avatar.customConfig = { ...sdk.customConfig };
@@ -644,13 +681,15 @@ export class PlatformLobby {
     try {
       const root = this.localController.root;
       const cfg = sdk.customConfig as Record<string, unknown>;
-      AvatarFactory.setTint(root, readTintFromConfig(cfg));
-      AvatarFactory.setBaseAlbedo(root, readBaseAlbedoUrlFromConfig(cfg));
+      const baseAlbedo = readBaseAlbedoUrlFromConfig(cfg);
+      AvatarFactory.setTint(root, baseAlbedo ? null : readTintFromConfig(cfg));
+      AvatarFactory.setBaseAlbedo(root, baseAlbedo);
       await attachAccessoriesFromAvatarConfig(this.sceneManager.scene, root, cfg);
     } catch (err) {
       console.warn('[lobby-sdk] applyLocalAvatarState failed', err);
     } finally {
       this.applyingAvatarState = false;
+      if (this.avatarStateDirty && !this.destroyed) void this.applyLocalAvatarState();
     }
   }
 
@@ -683,6 +722,7 @@ export class PlatformLobby {
     if (!this.canUseChat()) return false;
     const clean = sanitizeLobbyChat(text);
     if (!clean) return false;
+    if (this.communications) return this.communications.sendText(clean);
     this.emit('chat', {
       userId: this.init.user.id,
       username: this.init.user.username,
@@ -748,7 +788,13 @@ export class PlatformLobby {
   }
 
   canUseVoice() {
-    return this.lobbyFeatures.voiceEnabled && this.lobbyFeatures.voiceAllowed;
+    return this.lobbyFeatures.voiceEnabled && this.lobbyFeatures.voiceAllowed &&
+      (!this.communications || this.communications.hasLobbyRoom());
+  }
+
+  /** Public lobby calls must be enabled explicitly; friends-group calls are the default. */
+  canUseLobbyVoice() {
+    return Boolean(this.config.communications && this.config.communications.allowLobbyVoice);
   }
 
   /** Virtual joystick / on-screen pad. x = strafe, z = forward (-1..1). */
@@ -882,6 +928,8 @@ export class PlatformLobby {
     this.connectionDispose = null;
     this.orientationDispose?.();
     this.orientationDispose = null;
+    this.communications?.dispose();
+    this.communications = null;
     this.voiceChat?.dispose();
     this.voiceChat = null;
     this.lobbyClient?.destroy();

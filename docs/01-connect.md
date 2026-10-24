@@ -1,5 +1,7 @@
 # وصل کردن لابی به بازی
 
+برای آواتار واقعی کاربر، Draco و شخصی‌سازی، [مرجع استاندارد آواتار](./08-avatars.md) را همراه این راهنما بخوانید. `PlatformLobby.create` آواتار محلی و remote را خودکار می‌سازد؛ loader مجزا لازم نیست.
+
 برای رندر از **`@oyna360/lobby-babylon`** استفاده کنید.  
 Core خالص: [`@oyna360/lobby-sdk`](https://www.npmjs.com/package/@oyna360/lobby-sdk).
 

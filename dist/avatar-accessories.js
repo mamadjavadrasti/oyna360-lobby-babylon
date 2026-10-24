@@ -1,4 +1,5 @@
 import { Color3, Material, MeshBuilder, SceneLoader, StandardMaterial, TransformNode, Vector3 as BVector3, } from '@babylonjs/core';
+import { ensureDracoDecoder } from './draco';
 function solid(scene, name, color) {
     const mat = new StandardMaterial(name, scene);
     mat.diffuseColor = Color3.FromHexString(color);
@@ -81,6 +82,7 @@ function buildPrimitive(scene, name, primitive, parent, slot) {
     return root;
 }
 async function loadAccessoryGlb(scene, name, glbUrl, parent, slot) {
+    await ensureDracoDecoder(glbUrl);
     const slash = glbUrl.lastIndexOf('/');
     const rootUrl = slash >= 0 ? glbUrl.slice(0, slash + 1) : '';
     const fileName = slash >= 0 ? glbUrl.slice(slash + 1) : glbUrl;

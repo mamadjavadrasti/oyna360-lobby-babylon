@@ -10,13 +10,14 @@ import type { AbstractMesh, BaseTexture, GlowLayer } from '@babylonjs/core';
 import {
   isTouchDevice,
   shouldTrimAvatarDetailMaps,
+  resolveAvatarBaseAlbedoUrl,
   type LobbyQualityLevel,
 } from '@oyna360/lobby-sdk';
 import { assetCacheKey } from './avatar-asset-manager';
 
 export function readTintFromConfig(config: Record<string, unknown> | undefined): string | undefined {
   if (!config) return undefined;
-  for (const key of ['tintColor', 'bodyColor', 'skinColor'] as const) {
+  for (const key of ['tintColor', 'tint', 'bodyColor', 'skinColor'] as const) {
     const v = config[key];
     if (typeof v === 'string' && /^#[0-9a-fA-F]{6}$/.test(v)) return v;
   }
@@ -145,65 +146,11 @@ function absoluteAssetUrl(url: string): string {
   return `${window.location.origin}${url}`;
 }
 
-function readColorVariantTexture(
-  customConfig: Record<string, unknown> | undefined | null,
-): string | null {
-  if (!customConfig) return null;
-  const variants = customConfig.colorVariants;
-  if (!Array.isArray(variants) || variants.length === 0) return null;
-
-  const selectedKey =
-    typeof customConfig.colorVariantKey === 'string' && customConfig.colorVariantKey.trim()
-      ? customConfig.colorVariantKey.trim()
-      : typeof customConfig.defaultColorVariantKey === 'string' &&
-          customConfig.defaultColorVariantKey.trim()
-        ? customConfig.defaultColorVariantKey.trim()
-        : null;
-
-  let hit: Record<string, unknown> | null = null;
-  if (selectedKey) {
-    for (const entry of variants) {
-      if (!entry || typeof entry !== 'object') continue;
-      const src = entry as Record<string, unknown>;
-      if (src.key === selectedKey) {
-        hit = src;
-        break;
-      }
-    }
-  }
-  if (!hit) {
-    const first = variants[0];
-    if (first && typeof first === 'object') hit = first as Record<string, unknown>;
-  }
-  if (!hit) return null;
-  if (hit.appliesToBase === false) return null;
-  if (typeof hit.textureUrl === 'string' && hit.textureUrl.trim()) {
-    return hit.textureUrl.trim();
-  }
-  return null;
-}
-
-/** Read base-body albedo: preset colorVariants first, then accessory appliesToBase. */
+/** Shared with AvatarState so direct rendering and lobby rendering keep the same clothing. */
 export function readBaseAlbedoUrlFromConfig(
   customConfig: Record<string, unknown> | undefined | null,
 ): string | null {
-  const fromPalette = readColorVariantTexture(customConfig);
-  if (fromPalette) return fromPalette;
-
-  const raw = customConfig?.accessories;
-  if (!Array.isArray(raw)) return null;
-  for (const entry of raw) {
-    if (!entry || typeof entry !== 'object') continue;
-    const src = entry as {
-      textureUrl?: unknown;
-      appliesToBase?: unknown;
-    };
-    if (src.appliesToBase !== true) continue;
-    if (typeof src.textureUrl === 'string' && src.textureUrl.trim()) {
-      return src.textureUrl.trim();
-    }
-  }
-  return null;
+  return resolveAvatarBaseAlbedoUrl(customConfig);
 }
 
 /**

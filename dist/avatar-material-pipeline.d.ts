@@ -4,7 +4,7 @@ import { type LobbyQualityLevel } from '@oyna360/lobby-sdk';
 export declare function readTintFromConfig(config: Record<string, unknown> | undefined): string | undefined;
 /** Recolor avatar body meshes only — never the nametag billboard. */
 export declare function applyAvatarTint(root: TransformNode, hex: string | undefined | null): void;
-/** Read base-body albedo: preset colorVariants first, then accessory appliesToBase. */
+/** Shared with AvatarState so direct rendering and lobby rendering keep the same clothing. */
 export declare function readBaseAlbedoUrlFromConfig(customConfig: Record<string, unknown> | undefined | null): string | null;
 export declare function applyAvatarBaseAlbedo(root: TransformNode, textureUrl: string | null | undefined): void;
 export declare function lobbyQualityOf(scene: Scene): LobbyQualityLevel;

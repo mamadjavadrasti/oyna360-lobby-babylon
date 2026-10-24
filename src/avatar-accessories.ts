@@ -10,6 +10,7 @@ import {
 } from '@babylonjs/core';
 import type { AbstractMesh, BaseTexture } from '@babylonjs/core';
 import type { AvatarRig } from './avatar-factory';
+import { ensureDracoDecoder } from './draco';
 
 export type AccessoryPrimitive = 'cap' | 'pack' | 'glasses' | 'watch';
 
@@ -119,6 +120,7 @@ async function loadAccessoryGlb(
   parent: TransformNode,
   slot: EquippedAccessory['slot'],
 ) {
+  await ensureDracoDecoder(glbUrl);
   const slash = glbUrl.lastIndexOf('/');
   const rootUrl = slash >= 0 ? glbUrl.slice(0, slash + 1) : '';
   const fileName = slash >= 0 ? glbUrl.slice(slash + 1) : glbUrl;
